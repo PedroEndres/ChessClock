@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import ModalAlert from "./components/ModalAlert";
 
 function ChessClock() {
   const [player1Time, setPlayer1Time] = useState(600); // Tiempo inicial en segundos
   const [player2Time, setPlayer2Time] = useState(600);
   const [activePlayer, setActivePlayer] = useState(1); // Jugador activo (1 o 2)
   const [isRunning, setIsRunning] = useState(false);
-  const [customIncrement, setCustomIncrement] = useState(120); // Incremento personalizado en segundos (2 minutos)
+  const [customIncrement, setCustomIncrement] = useState(0); // Incremento personalizado en segundos (2 minutos)
   const [gameStarted, setGameStarted] = useState(false);
   const [customPlayer1Time, setCustomPlayer1Time] = useState(600); // Tiempo personalizado jugador 1 en segundos
   const [customPlayer2Time, setCustomPlayer2Time] = useState(600); // Tiempo personalizado jugador 2 en segundos
-  const [player1RedBackground, setPlayer1RedBackground] = useState(false); // Estado de fondo rojo para jugador 1
-  const [player2RedBackground, setPlayer2RedBackground] = useState(false); // Estado de fondo rojo para jugador 2
   const [theme, setTheme] = useState("light"); // Estado para el tema (light o dark)
 
   // Use effects para sincronizar jugadores
@@ -29,18 +28,8 @@ function ChessClock() {
       timer = setInterval(() => {
         if (activePlayer === 1) {
           setPlayer1Time((prevTime) => prevTime - 1);
-          if (player1Time <= 20) {
-            setPlayer1RedBackground(true);
-          } else {
-            setPlayer1RedBackground(false); // Restablecer el fondo rojo
-          }
         } else {
           setPlayer2Time((prevTime) => prevTime - 1);
-          if (player2Time <= 20) {
-            setPlayer2RedBackground(true);
-          } else {
-            setPlayer2RedBackground(false); // Restablecer el fondo rojo
-          }
         }
       }, 1000); // El temporizador aún se actualiza cada segundo para el control del incremento.
     } else {
@@ -48,8 +37,8 @@ function ChessClock() {
     }
 
     // Verificar si el tiempo se ha agotado
-    if (player1Time === 0 || player2Time === 0) {
-      alert(`¡Jugador ${activePlayer} ha perdido por tiempo!`);
+    if ((player1Time === 0) & isRunning || (player2Time === 0) & isRunning) {
+      // alert(`¡Jugador ${activePlayer} ha perdido por tiempo!`);
       setIsRunning(false);
     }
 
@@ -63,24 +52,12 @@ function ChessClock() {
   };
 
   const chessClockClass = `chess-clock ${theme}-theme`;
-  const playerTimerClass =
-    activePlayer === 1
-      ? `player-timer ${theme}-theme`
-      : `player-timer ${theme}-theme`;
-  const playerTimerRedClass =
-    activePlayer === 1 && player1RedBackground
-      ? `player-timer player-timer-red ${theme}-theme`
-      : activePlayer === 2 && player2RedBackground
-      ? `player-timer player-timer-red ${theme}-theme`
-      : `player-timer ${theme}-theme`;
 
   const handleStartPause = () => {
     if (!gameStarted) {
       setGameStarted(true);
       setPlayer1Time(customPlayer1Time);
       setPlayer2Time(customPlayer2Time);
-      setPlayer1RedBackground(false); // Restablecer el fondo rojo
-      setPlayer2RedBackground(false); // Restablecer el fondo rojo
     }
 
     setIsRunning((prevIsRunning) => !prevIsRunning); // setea el valor contrario
@@ -92,25 +69,18 @@ function ChessClock() {
     setIsRunning(false);
     setActivePlayer(1);
     setGameStarted(false); // Reiniciar la partida
-    setPlayer1RedBackground(false); // Restablecer el fondo rojo
-    setPlayer2RedBackground(false); // Restablecer el fondo rojo
   };
 
   const handlePlayerClick = () => {
     if (gameStarted && isRunning) {
-      // Aplicar el incremento personalizado al temporizador activo si la partida ha comenzado y no está en pausa
-      if (customIncrement > 0) {
-        if (activePlayer === 1) {
-          setPlayer1Time((prevTime) => prevTime + customIncrement);
-        } else {
-          setPlayer2Time((prevTime) => prevTime + customIncrement);
-        }
+      if (activePlayer === 1) {
+        setPlayer1Time((prevTime) => prevTime + customIncrement);
+      } else {
+        setPlayer2Time((prevTime) => prevTime + customIncrement);
       }
+      setActivePlayer((prevPlayer) => (prevPlayer === 1 ? 2 : 1));
     }
-    // Cambiar entre los temporizadores de los jugadores al hacer clic en el temporizador
-    setActivePlayer((prevPlayer) => (prevPlayer === 1 ? 2 : 1));
   };
-
   const handleCustomIncrementChange = (event) => {
     // Actualizar el valor del incremento personalizado en segundos
     const newIncrement = parseInt(event.target.value, 10);
@@ -141,26 +111,28 @@ function ChessClock() {
       <div
         id="player1"
         className={`${activePlayer === 1 ? "active-timer " : ""}${
-          player1Time <= 20 ? playerTimerRedClass : playerTimerClass
-        } ${theme}-theme`}
-        onClick={handlePlayerClick}
+          player1Time <= 15 ? "player-timer-red " : ""
+        }player-timer ${theme}-theme`}
+        onClick={
+          activePlayer === 1 && gameStarted ? handlePlayerClick : undefined
+        }
       >
         {formatTime(player1Time)}
       </div>
       <div id="buttons-start-reset">
-        <button id="button-start" onClick={handleStartPause}>
+        <button onClick={handleStartPause}>
           {isRunning ? "Pausa" : "Iniciar"}
         </button>
-        <button id="button-reset" onClick={handleReset}>
-          Reiniciar
-        </button>
+        <button onClick={handleReset}>Reiniciar</button>
       </div>
       <div
         id="player2"
         className={`${activePlayer === 2 ? "active-timer " : ""}${
-          player2Time <= 20 ? playerTimerRedClass : playerTimerClass
-        } ${theme}-theme`}
-        onClick={handlePlayerClick}
+          player2Time <= 15 ? "player-timer-red " : ""
+        }player-timer ${theme}-theme`}
+        onClick={
+          activePlayer === 2 && gameStarted ? handlePlayerClick : undefined
+        }
       >
         {formatTime(player2Time)}
       </div>
@@ -196,6 +168,15 @@ function ChessClock() {
           <button onClick={toggleTheme}>Cambiar Tema</button>
         </div>
       </div>
+      <ModalAlert
+        player={
+          player1Time === 0 && isRunning
+            ? "Jugador 1"
+            : player2Time === 0 && isRunning
+            ? "Jugador 2"
+            : null
+        }
+      />
     </div>
   );
 }

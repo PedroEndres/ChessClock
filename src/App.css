@@ -71,7 +71,7 @@ button {
 }
 
 .light-theme .player-timer-red {
-  background-color: red !important;
+  background-color: rgb(92 14 14) !important;
 }
 
 /* Estilos para el tema oscuro (dark) */
@@ -112,7 +112,7 @@ button {
 }
 
 .dark-theme .player-timer-red {
-  background-color: red !important;
+  background-color: rgb(124, 14, 57) !important;
 }
 
 #buttons-start-reset {
@@ -121,14 +121,6 @@ button {
   justify-items: center;
   align-items: center;
   height: 10vh;
-}
-
-#button-start {
-  padding: 20px;
-}
-
-#button-reset {
-  padding: 20px;
 }
 
 #settings-container {
